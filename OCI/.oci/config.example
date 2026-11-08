@@ -1,0 +1,6 @@
+[DEFAULT]
+user=#user OCID
+fingerprint=#fingerprint
+tenancy=#tenancy OCID
+region=#region
+key_file=/workspace/OCI/.oci/keys/api/oci_api_key.pem

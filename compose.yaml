@@ -1,0 +1,90 @@
+
+services:
+  oci:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: oci
+
+    stdin_open: true
+    tty: true
+
+    working_dir: /workspace
+
+    volumes:
+      - ./OCI:/workspace/OCI
+
+    environment:
+      TELEGRAM_GATEWAY_URL: http://telegram-gateway:8787
+      GATEWAY_API_KEY: ${GATEWAY_API_KEY:?Set GATEWAY_API_KEY in .env}
+
+      OCI_CLI_USER: ${OCI_CLI_USER:?Set OCI_CLI_USER in .env}
+      OCI_CLI_REGION: ${OCI_CLI_REGION:?Set OCI_CLI_REGION in .env}
+      OCI_CLI_FINGERPRINT: ${OCI_CLI_FINGERPRINT:?Set OCI_CLI_FINGERPRINT in .env}
+      OCI_CLI_KEY_FILE: ${OCI_CLI_KEY_FILE:?Set OCI_CLI_KEY_FILE in .env}
+      OCI_CLI_TENANCY: ${OCI_CLI_TENANCY:?Set OCI_CLI_TENANCY in .env}
+
+      SOCI_CONN_TIMEOUT_S: ${SOCI_CONN_TIMEOUT_S:?Set SOCI_CONN_TIMEOUT_S in .env}
+      SOCI_MAX_LOG_SIZE: ${SOCI_MAX_LOG_SIZE:?Set SOCI_MAX_LOG_SIZE in .env}
+      SOCI_LOG_FILE: ${SOCI_LOG_FILE:?Set SOCI_LOG_FILE in .env}
+      SOCI_ERR_LOG_FILE: ${SOCI_ERR_LOG_FILE:?Set SOCI_ERR_LOG_FILE in .env}
+      SOCI_INSTANCE_PUBLIC_KEY: ${SOCI_INSTANCE_PUBLIC_KEY:?Set SOCI_INSTANCE_PUBLIC_KEY in .env}
+      SOCI_COPARTMENT: ${SOCI_COPARTMENT:?Set SOCI_COPARTMENT in .env}
+      SOCI_SUBNET: ${SOCI_SUBNET:?Set SOCI_SUBNET in .env}
+      SOCI_IMAGE: ${SOCI_IMAGE:?Set SOCI_IMAGE in .env}
+
+      SOCI_INSTANCE_NAME: ${SOCI_INSTANCE_NAME:?Set SOCI_INSTANCE_NAME in .env}
+      SOCI_INSTANCE_SHAPE: ${SOCI_INSTANCE_SHAPE:?Set SOCI_INSTANCE_SHAPE in .env}
+      SOCI_OCPUS: ${SOCI_OCPUS:?Set SOCI_OCPUS in .env}
+      SOCI_RAM_GB: ${SOCI_RAM_GB:?Set SOCI_RAM_GB in .env}
+      SOCI_BOOT_VOLUME_GB: ${SOCI_BOOT_VOLUME_GB:?Set SOCI_BOOT_VOLUME_GB in .env}
+      SOCI_PUBLIC_IP: ${SOCI_PUBLIC_IP:?Set SOCI_PUBLIC_IP in .env}
+      SOCI_PRIVATE_DNS: ${SOCI_PRIVATE_DNS:?Set SOCI_PRIVATE_DNS in .env}
+    
+
+    depends_on:
+      telegram-gateway:
+        condition: service_healthy
+
+    networks:
+      - telegram-net
+
+    restart: unless-stopped
+
+  telegram-gateway:
+    build:
+      context: ./telegram-gateway
+      dockerfile: Dockerfile
+
+    container_name: telegram-gateway
+
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?Set TELEGRAM_BOT_TOKEN in .env}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:?Set TELEGRAM_CHAT_ID in .env}
+      GATEWAY_API_KEY: ${GATEWAY_API_KEY:?Set GATEWAY_API_KEY in .env}
+      SOCI_LOG_FILE: ${SOCI_LOG_FILE:?Set SOCI_LOG_FILE in .env}
+
+    volumes:
+      - ./OCI/logs:/workspace/OCI/logs:ro
+
+    networks:
+      - telegram-net
+
+    restart: unless-stopped
+
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  telegram-net:
+    name: telegram-net
+    driver: bridge

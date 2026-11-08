@@ -1,0 +1,6 @@
+*.log
+*.pem
+*.pub
+.env
+
+/.vscode
