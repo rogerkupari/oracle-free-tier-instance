@@ -60,6 +60,16 @@ A script to create a Free Tier Compute Instance in Oracle Cloud. Runs in a Docke
 
 5. Copy the configuration details provided by Oracle Cloud and enter the corresponding values in your `.env` file.
 
+### SSH Key Generation
+
+Generate an SSH key pair for the server:
+
+```bash
+ssh-keygen -b 2048 -t rsa -f <yourKeyName>
+```
+
+Place the public key (`.pub` file) in `OCI/.oci/keys/script/id_rsa.pub`, or update the corresponding configuration in your `.env` file to point to the correct path.
+
 ### Remaining Environment Configuration
 
 - Follow the instructions and comments provided in the `.env` file to configure the remaining variables.
